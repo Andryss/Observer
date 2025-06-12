@@ -11,6 +11,11 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 @SpringBootApplication
 public class ObserverBotApplication {
 
+    /**
+     * Application entry point. Runs spring boot application context.
+     * Then registers bot in telegram ({@link LongPollingBot} instance).
+     * @throws TelegramApiException if some error occurred during bot registration
+     */
     public static void main(String[] args) throws TelegramApiException {
         ConfigurableApplicationContext context = SpringApplication.run(ObserverBotApplication.class, args);
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
