@@ -1,0 +1,5 @@
+spring.application.name=observer_bot
+
+### bot settings
+bot.token=YOUR_BOT_TOKEN
+bot.username=YOUR_BOT_USERNAME
