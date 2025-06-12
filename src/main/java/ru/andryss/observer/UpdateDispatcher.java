@@ -34,15 +34,15 @@ public class UpdateDispatcher extends TelegramLongPollingBot implements Disposab
     @Override
     public void onUpdateReceived(Update update) {
         Integer updateId = update.getUpdateId();
-        log.debug("Update {} received", updateId);
+        log.info("Update {} received", updateId);
 
         if (needToSkip(update)) {
-            log.debug("Update {} skipped", updateId);
+            log.info("Update {} skipped", updateId);
             return;
         }
 
         updateExecutors.submit(() -> handleUpdate(update));
-        log.debug("Update {} submitted for execution", updateId);
+        log.info("Update {} submitted for execution", updateId);
     }
 
     private boolean needToSkip(Update update) {
@@ -50,7 +50,7 @@ public class UpdateDispatcher extends TelegramLongPollingBot implements Disposab
             Message message = update.getMessage();
             Instant messageTimestamp = Instant.ofEpochSecond(message.getDate());
             if (messageTimestamp.isBefore(Instant.now().minusSeconds(messageExpirationSeconds))) {
-                log.debug("Update {} message is too old {}, skipping", update.getUpdateId(), messageTimestamp);
+                log.info("Update {} message is too old {}, skipping", update.getUpdateId(), messageTimestamp);
                 return true;
             }
         }
