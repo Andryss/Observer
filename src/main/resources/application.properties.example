@@ -1,6 +1,17 @@
+### application settings
 spring.application.name=observer_bot
 
 ### bot settings
 bot.token=YOUR_BOT_TOKEN
 bot.username=YOUR_BOT_USERNAME
 bot.expiration-seconds=60
+
+### database settings
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.url=jdbc:postgresql://localhost:5432/observer
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+
+### liquibase settings
+spring.liquibase.enabled=true
+spring.liquibase.change-log=classpath:/liquibase/db-changelog.xml

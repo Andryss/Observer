@@ -1,29 +1,90 @@
 package ru.andryss.observer;
 
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
+import java.util.List;
 
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.andryss.observer.executor.UpdateExecutor;
 
-@SpringBootTest
-class UpdateDispatcherTest {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
+class UpdateDispatcherTest extends BaseDbTest {
+
+    @TestConfiguration
+    static class UpdateDispatcherTestConfig {
+        @Bean
+        public UpdateExecutor inactiveExecutor() {
+            UpdateExecutor executor = Mockito.mock(UpdateExecutor.class);
+            Mockito.when(executor.isActive()).thenReturn(false);
+            return executor;
+        }
+        @Bean
+        public UpdateExecutor nothingProcessExecutor() {
+            UpdateExecutor executor = Mockito.mock(UpdateExecutor.class);
+            Mockito.when(executor.isActive()).thenReturn(true);
+            Mockito.when(executor.canProcess(any())).thenReturn(false);
+            return executor;
+        }
+        @Bean
+        public UpdateExecutor alwaysProcessingExecutor() {
+            UpdateExecutor executor = Mockito.mock(UpdateExecutor.class);
+            Mockito.when(executor.isActive()).thenReturn(true);
+            Mockito.when(executor.canProcess(any())).thenReturn(true);
+            return executor;
+        }
+        @Bean
+        @SneakyThrows
+        public UpdateExecutor alwaysFailingExecutor() {
+            UpdateExecutor executor = Mockito.mock(UpdateExecutor.class);
+            Mockito.when(executor.isActive()).thenReturn(true);
+            Mockito.when(executor.canProcess(any())).thenReturn(true);
+            Mockito.doThrow(new RuntimeException("process failed")).when(executor).process(any(), any());
+            return executor;
+        }
+        @Bean
+        public List<UpdateExecutor> executors() {
+            return List.of(
+                    inactiveExecutor(),
+                    nothingProcessExecutor(),
+                    alwaysProcessingExecutor(),
+                    alwaysFailingExecutor()
+            );
+        }
+    }
 
     @Autowired
     UpdateDispatcher dispatcher;
 
-    @MockitoBean
-    ExecutorService updateExecutors;
+    @Autowired
+    UpdateExecutor inactiveExecutor;
+
+    @Autowired
+    UpdateExecutor nothingProcessExecutor;
+
+    @Autowired
+    UpdateExecutor alwaysProcessingExecutor;
+
+    @Autowired
+    UpdateExecutor alwaysFailingExecutor;
 
     @BeforeEach
     void before() {
-        Mockito.reset(updateExecutors);
+        Mockito.clearInvocations(
+                inactiveExecutor,
+                nothingProcessExecutor,
+                alwaysProcessingExecutor,
+                alwaysFailingExecutor
+        );
     }
 
     @Test
@@ -32,8 +93,8 @@ class UpdateDispatcherTest {
 
         dispatcher.onUpdateReceived(emptyUpdate);
 
-        Mockito.verify(updateExecutors).submit(Mockito.<Runnable>any());
-        Mockito.verifyNoMoreInteractions(updateExecutors);
+        verifyExecutors();
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -46,8 +107,8 @@ class UpdateDispatcherTest {
 
         dispatcher.onUpdateReceived(update);
 
-        Mockito.verify(updateExecutors).submit(Mockito.<Runnable>any());
-        Mockito.verifyNoMoreInteractions(updateExecutors);
+        verifyExecutors();
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -60,7 +121,27 @@ class UpdateDispatcherTest {
 
         dispatcher.onUpdateReceived(update);
 
-        Mockito.verifyNoMoreInteractions(updateExecutors);
+        verifyNoMoreMockInteractions();
     }
 
+    @SneakyThrows
+    private void verifyExecutors() {
+        verify(inactiveExecutor).isActive();
+
+        verify(nothingProcessExecutor).isActive();
+        verify(nothingProcessExecutor).canProcess(any());
+
+        verify(alwaysProcessingExecutor).isActive();
+        verify(alwaysProcessingExecutor).canProcess(any());
+        verify(alwaysProcessingExecutor).process(any(), any());
+
+        verify(alwaysFailingExecutor).isActive();
+        verify(alwaysFailingExecutor).canProcess(any());
+        verify(alwaysFailingExecutor).process(any(), any());
+    }
+
+    private void verifyNoMoreMockInteractions() {
+        verifyNoMoreInteractions(inactiveExecutor);
+        verifyNoMoreInteractions(nothingProcessExecutor);
+    }
 }

@@ -16,7 +16,11 @@
 
     <properties>
         <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <telegrambots.version>6.9.7.1</telegrambots.version>
+        <postgresql.version>42.7.7</postgresql.version>
+        <zonky.embedded-database.version>2.6.0</zonky.embedded-database.version>
+        <zonky.embedded-postgres.version>2.1.0</zonky.embedded-postgres.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <jacoco-plugin.version>0.8.12</jacoco-plugin.version>
     </properties>
@@ -41,6 +45,11 @@
             <version>${telegrambots.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
         <!-- PROCESSOR DEPENDENCIES -->
 
         <dependency>
@@ -55,11 +64,39 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- COMMON DEPENDENCIES -->
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
         <!-- TEST DEPENDENCIES -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-database-spring-test</artifactId>
+            <version>${zonky.embedded-database.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
+            <version>${zonky.embedded-postgres.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -86,7 +123,6 @@
                 </executions>
                 <configuration>
                     <configLocation>checkstyle/checkstyle.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
@@ -130,12 +166,12 @@
                                         <limit>
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.90</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.90</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

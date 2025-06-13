@@ -1,69 +1,74 @@
 package ru.andryss.observer;
 
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
+import java.util.List;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.andryss.observer.config.BotProperties;
+import ru.andryss.observer.executor.UpdateExecutor;
 
 @Slf4j
 @Component
-public class UpdateDispatcher extends TelegramLongPollingBot implements DisposableBean {
+public class UpdateDispatcher extends TelegramLongPollingBot {
 
-    @Getter
-    private final String botUsername;
-    private final int messageExpirationSeconds;
-    private final ExecutorService updateExecutors;
+    private final BotProperties properties;
+    private final List<UpdateExecutor> executors;
 
     public UpdateDispatcher(
             BotProperties botProperties,
-            ExecutorService updateExecutors
+            List<UpdateExecutor> executors
     ) {
         super(botProperties.getToken());
-        this.botUsername = botProperties.getUsername();
-        this.messageExpirationSeconds = botProperties.getExpirationSeconds();
-        this.updateExecutors = updateExecutors;
+        this.properties = botProperties;
+        this.executors = executors;
+    }
+
+    @Override
+    public String getBotUsername() {
+        return properties.getUsername();
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        Integer updateId = update.getUpdateId();
-        log.info("Update {} received", updateId);
+        log.info("Update received {}", update);
 
+        Integer updateId = update.getUpdateId();
         if (needToSkip(update)) {
             log.info("Update {} skipped", updateId);
             return;
         }
 
-        updateExecutors.submit(() -> handleUpdate(update));
-        log.info("Update {} submitted for execution", updateId);
+        for (UpdateExecutor executor : executors) {
+            if (!executor.isActive()) {
+                continue;
+            }
+            if (!executor.canProcess(update)) {
+                continue;
+            }
+            try {
+                log.info("Submitting update {} for execution on {}", updateId, executor);
+                executor.process(update, this);
+            } catch (Exception e) {
+                log.error("Executor {} failed with error on update {}: {}", executor, updateId, e.getMessage(), e);
+            }
+        }
+        log.info("Update {} handled", updateId);
     }
 
     private boolean needToSkip(Update update) {
         if (update.hasMessage()) {
             Message message = update.getMessage();
             Instant messageTimestamp = Instant.ofEpochSecond(message.getDate());
-            if (messageTimestamp.isBefore(Instant.now().minusSeconds(messageExpirationSeconds))) {
+            if (messageTimestamp.isBefore(Instant.now().minusSeconds(properties.getExpirationSeconds()))) {
                 log.info("Update {} message is too old {}, skipping", update.getUpdateId(), messageTimestamp);
                 return true;
             }
         }
 
         return false;
-    }
-
-    private void handleUpdate(Update update) {
-        log.info("Received update {}: {}", update.getUpdateId(), update);
-    }
-
-    @Override
-    public void destroy() {
-        updateExecutors.shutdownNow();
     }
 }

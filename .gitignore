@@ -1,5 +1,6 @@
 src/main/resources/application.properties
 logs/
+.postgres/
 
 HELP.md
 target/
