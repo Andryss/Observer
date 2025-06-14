@@ -60,9 +60,9 @@ public class SendMessageExecutor implements UpdateExecutor {
         sender.execute(action);
 
         MessageDto userMessage = new MessageDto(text);
-        MessageDto responseMessage = gptModelService.handleMessage(chatId, userMessage);
+        MessageDto responseMessage = gptModelService.handleMessage(chatId.toString(), userMessage);
 
-        SendMessage sendMessage = new SendMessage(chatId.toString(), responseMessage.text());
+        SendMessage sendMessage = new SendMessage(chatId.toString(), responseMessage.getText());
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setAllowSendingWithoutReply(true);
         sender.execute(sendMessage);

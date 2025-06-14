@@ -17,6 +17,7 @@ import ru.andryss.observer.generated.yandexgpt.model.Message;
 import ru.andryss.observer.generated.yandexgpt.model.MessageRole;
 import ru.andryss.observer.generated.yandexgpt.model.ReasoningOptions;
 import ru.andryss.observer.generated.yandexgpt.model.ReasoningOptions.ModeEnum;
+import ru.andryss.observer.model.MessageDto;
 
 class YandexGptFacadeTest {
 
@@ -50,7 +51,7 @@ class YandexGptFacadeTest {
                         )
                 );
 
-        String response = yandexGptFacade.generateAlternative("some-test");
+        String response = yandexGptFacade.generateAlternative(contextMessages(), userMessage());
 
         Assertions.assertThat(response).isEqualTo("some response");
 
@@ -66,11 +67,23 @@ class YandexGptFacadeTest {
                         )
                 );
 
-        Assertions.assertThatThrownBy(() -> yandexGptFacade.generateAlternative("some-test"))
+        Assertions.assertThatThrownBy(() -> yandexGptFacade.generateAlternative(contextMessages(), userMessage()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No alternatives returned from yandex gpt");
 
         verifyCreateCompletion();
+    }
+
+    private List<MessageDto> contextMessages() {
+        return List.of(
+                new MessageDto(ru.andryss.observer.model.MessageRole.SYSTEM, "some-instuction"),
+                new MessageDto(ru.andryss.observer.model.MessageRole.USER, "some-user-first-message"),
+                new MessageDto(ru.andryss.observer.model.MessageRole.ASSISTANT, "some-model-answer")
+        );
+    }
+
+    private MessageDto userMessage() {
+        return new MessageDto(ru.andryss.observer.model.MessageRole.USER, "some-user-message");
     }
 
     private void verifyCreateCompletion() {
@@ -85,17 +98,10 @@ class YandexGptFacadeTest {
                         )
                 )
                 .messages(List.of(
-                        new Message()
-                                .role(MessageRole.SYSTEM)
-                                .text("""
-                                        Будь как хороший друг — общайся просто, по-человечески, без официоза.
-                                        Отвечай кратко и по сути, не занудствуй.
-                                        Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
-                                        Не строй из себя всезнайку, но если можешь помочь — помоги.
-                                        """),
-                        new Message()
-                                .role(MessageRole.USER)
-                                .text("some-test")
+                        new Message().role(MessageRole.SYSTEM).text("some-instuction"),
+                        new Message().role(MessageRole.USER).text("some-user-first-message"),
+                        new Message().role(MessageRole.ASSISTANT).text("some-model-answer"),
+                        new Message().role(MessageRole.USER).text("some-user-message")
                 ))
         );
     }

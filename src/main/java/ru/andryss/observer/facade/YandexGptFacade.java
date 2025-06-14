@@ -1,5 +1,6 @@
 package ru.andryss.observer.facade;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import ru.andryss.observer.generated.yandexgpt.model.Message;
 import ru.andryss.observer.generated.yandexgpt.model.MessageRole;
 import ru.andryss.observer.generated.yandexgpt.model.ReasoningOptions;
 import ru.andryss.observer.generated.yandexgpt.model.ReasoningOptions.ModeEnum;
+import ru.andryss.observer.model.MessageDto;
 
 /**
  * Facade for working with yandex gpt api
@@ -25,12 +27,6 @@ public class YandexGptFacade {
     private static final String MODEL_URI_TEMPLATE = "gpt://%s/yandexgpt";
     private static final double DEFAULT_MODEL_TEMPERATURE = 0.7;
     private static final String DEFAULT_MODEL_MAX_TOKENS = "200";
-    private static final String DEFAULT_MODEL_INSTRUCTIONS = """
-            Будь как хороший друг — общайся просто, по-человечески, без официоза.
-            Отвечай кратко и по сути, не занудствуй.
-            Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
-            Не строй из себя всезнайку, но если можешь помочь — помоги.
-            """;
 
     private final YandexGptProperties properties;
     private final YandexGptApi yandexGptApi;
@@ -39,7 +35,13 @@ public class YandexGptFacade {
      * Invoke <a href="https://yandex.cloud/ru/docs/foundation-models/text-generation/api-ref/TextGeneration/
      * completion">generate completion method</a> of yandex gpt api with given parameters and extract model answer
      */
-    public String generateAlternative(String text) {
+    public String generateAlternative(List<MessageDto> context, MessageDto userMessage) {
+        ArrayList<Message> messages = new ArrayList<>();
+        for (MessageDto messageDto : context) {
+            messages.add(mapMessage(messageDto));
+        }
+        messages.add(mapMessage(userMessage));
+
         CompletionRequest request = new CompletionRequest()
                 .modelUri(MODEL_URI_TEMPLATE.formatted(properties.getFolderId()))
                 .completionOptions(new CompletionOptions()
@@ -50,14 +52,7 @@ public class YandexGptFacade {
                                 .mode(ModeEnum.DISABLED)
                         )
                 )
-                .messages(List.of(
-                        new Message()
-                                .role(MessageRole.SYSTEM)
-                                .text(DEFAULT_MODEL_INSTRUCTIONS),
-                        new Message()
-                                .role(MessageRole.USER)
-                                .text(text)
-                ));
+                .messages(messages);
 
         CompletionResponse response = yandexGptApi.foundationModelsV1CompletionPost(request);
 
@@ -68,5 +63,19 @@ public class YandexGptFacade {
         }
 
         return alternatives.get(0).getMessage().getText();
+    }
+
+    private Message mapMessage(MessageDto dto) {
+        return new Message()
+                .role(mapRole(dto.getRole()))
+                .text(dto.getText());
+    }
+
+    private MessageRole mapRole(ru.andryss.observer.model.MessageRole role) {
+        return switch (role) {
+            case SYSTEM -> MessageRole.SYSTEM;
+            case USER -> MessageRole.USER;
+            case ASSISTANT -> MessageRole.ASSISTANT;
+        };
     }
 }

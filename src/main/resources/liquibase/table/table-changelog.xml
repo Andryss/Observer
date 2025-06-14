@@ -9,5 +9,6 @@
     </preConditions>
 
     <include file="key_storage.sql" relativeToChangelogFile="true"/>
+    <include file="chat_contexts.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
