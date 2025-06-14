@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
+import ru.andryss.observer.model.MessageDto;
+import ru.andryss.observer.service.GptModelService;
 import ru.andryss.observer.service.KeyStorageService;
 
 @Component
@@ -17,6 +19,7 @@ import ru.andryss.observer.service.KeyStorageService;
 public class SendMessageExecutor implements UpdateExecutor {
 
     private final KeyStorageService keyStorageService;
+    private final GptModelService gptModelService;
 
 
     @Override
@@ -48,8 +51,11 @@ public class SendMessageExecutor implements UpdateExecutor {
         Long chatId = message.getChatId();
         String text = message.getText();
 
-        // TODO: get more complex logic
-        SendMessage sendMessage = new SendMessage(chatId.toString(), text);
+        MessageDto userMessage = new MessageDto(text);
+
+        MessageDto responseMessage = gptModelService.handleMessage(chatId, userMessage);
+
+        SendMessage sendMessage = new SendMessage(chatId.toString(), responseMessage.text());
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setAllowSendingWithoutReply(true);
         sender.execute(sendMessage);

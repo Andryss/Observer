@@ -13,7 +13,7 @@ public class YandexGptConfiguration {
     @Bean
     public YandexGptApi yandexGptApi(YandexGptProperties properties) {
         ApiClient apiClient = new ApiClient();
-        apiClient.setBasePath(properties.getIamToken());
+        apiClient.setBearerToken(properties.getIamToken());
         return new YandexGptApi(apiClient);
     }
 }

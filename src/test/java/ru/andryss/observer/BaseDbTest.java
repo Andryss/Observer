@@ -2,6 +2,7 @@ package ru.andryss.observer;
 
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
@@ -11,5 +12,6 @@ import org.springframework.test.context.ActiveProfiles;
         type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES,
         provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY
 )
+@Import(MockBeansConfig.class)
 public abstract class BaseDbTest {
 }
