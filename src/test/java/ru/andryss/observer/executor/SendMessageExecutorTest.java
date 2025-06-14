@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -118,9 +119,22 @@ class SendMessageExecutorTest extends BaseDbTest {
         executor.process(buildUpdate(), sender);
 
         Mockito.verify(yandexGptApi).foundationModelsV1CompletionPost(any());
-        ArgumentCaptor<SendMessage> argumentCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        Mockito.verify(sender).execute(argumentCaptor.capture());
-        Assertions.assertThat(argumentCaptor.getValue())
+
+        ArgumentCaptor<SendChatAction> sendChatActionCaptor = ArgumentCaptor.forClass(SendChatAction.class);
+        Mockito.verify(sender).execute(sendChatActionCaptor.capture());
+        Assertions.assertThat(sendChatActionCaptor.getValue())
+                .extracting(
+                        "chatId",
+                        "action"
+                )
+                .containsExactly(
+                        "123",
+                        "typing"
+                );
+
+        ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        Mockito.verify(sender).execute(sendMessageCaptor.capture());
+        Assertions.assertThat(sendMessageCaptor.getValue())
                 .extracting(
                         "chatId",
                         "text",
@@ -133,6 +147,7 @@ class SendMessageExecutorTest extends BaseDbTest {
                         456,
                         true
                 );
+
         Mockito.verifyNoMoreInteractions(yandexGptApi);
         Mockito.verifyNoMoreInteractions(sender);
     }

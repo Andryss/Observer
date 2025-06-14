@@ -6,6 +6,8 @@ import java.util.Objects;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ActionType;
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -51,8 +53,13 @@ public class SendMessageExecutor implements UpdateExecutor {
         Long chatId = message.getChatId();
         String text = message.getText();
 
-        MessageDto userMessage = new MessageDto(text);
+        // Send typing action to show user that something happens
+        SendChatAction action = new SendChatAction();
+        action.setChatId(chatId);
+        action.setAction(ActionType.TYPING);
+        sender.execute(action);
 
+        MessageDto userMessage = new MessageDto(text);
         MessageDto responseMessage = gptModelService.handleMessage(chatId, userMessage);
 
         SendMessage sendMessage = new SendMessage(chatId.toString(), responseMessage.text());
