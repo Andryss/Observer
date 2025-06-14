@@ -21,6 +21,7 @@
         <postgresql.version>42.7.7</postgresql.version>
         <zonky.embedded-database.version>2.6.0</zonky.embedded-database.version>
         <zonky.embedded-postgres.version>2.1.0</zonky.embedded-postgres.version>
+        <openapi-generator-plugin.version>7.8.0</openapi-generator-plugin.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <jacoco-plugin.version>0.8.12</jacoco-plugin.version>
     </properties>
@@ -48,6 +49,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <!-- PROCESSOR DEPENDENCIES -->
@@ -109,6 +115,30 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/api/clients/yandexgpt.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <apiPackage>ru.andryss.observer.generated.yandexgpt.api</apiPackage>
+                            <modelPackage>ru.andryss.observer.generated.yandexgpt.model</modelPackage>
+                            <invokerPackage>ru.andryss.observer.generated.yandexgpt.invoker</invokerPackage>
+                            <configOptions>
+                                <library>resttemplate</library>
+                                <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${checkstyle-plugin.version}</version>
@@ -135,9 +165,9 @@
                 <configuration>
                     <excludes>
                         <!-- exclude generated classes -->
-                        <exclude>ru/andryss/trousseau/generated/**</exclude>
+                        <exclude>ru/andryss/observer/generated/**</exclude>
                         <!-- exclude configuration classes -->
-                        <exclude>ru/andryss/trousseau/config/**</exclude>
+                        <exclude>ru/andryss/observer/config/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

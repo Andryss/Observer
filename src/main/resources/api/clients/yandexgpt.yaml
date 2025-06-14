@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: Yandex GPT
+  description: Yandex GPT public API
+  version: 1.0.0
+
+externalDocs:
+  description: Yandex Foundation Models
+  url: https://yandex.cloud/ru/docs/foundation-models/
+
+servers:
+  - url: https://llm.api.cloud.yandex.net
+
+tags:
+  - name: YandexGpt
+    description: Yandex GPT API
+
+security:
+  - bearerAuth: []
+
+paths:
+  /foundationModels/v1/completion:
+    post:
+      summary: Generate text completions
+      description: A method for generating text completions in synchronous mode.
+      tags:
+        - YandexGpt
+      externalDocs:
+        url: https://yandex.cloud/ru/docs/foundation-models/text-generation/api-ref/TextGeneration/completion
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompletionRequest"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletionResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      description: Bearer token using an IAM yandex token (https://yandex.cloud/ru/docs/iam/operations/iam-token/create)
+      type: http
+      scheme: Bearer
+      bearerFormat: IAM
+  schemas:
+    CompletionRequest:
+      description: Generate text completions request
+      type: object
+      properties:
+        modelUri:
+          description: The ID of the model to be used for completion generation.
+          type: string
+        completionOptions:
+          $ref: "#/components/schemas/CompletionOptions"
+        messages:
+          description: A list of messages representing the context for the completion model.
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+    CompletionOptions:
+      description: Defines the options for completion generation.
+      type: object
+      properties:
+        stream:
+          description: Enables streaming of partially generated text
+          type: boolean
+        temperature:
+          description: |
+            Affects creativity and randomness of responses. Should be a double number between 0 (inclusive) and 1 (inclusive).
+            Lower values produce more straightforward responses while higher values lead to increased creativity and randomness.
+          type: number
+          format: double
+          default: 0.3
+        maxTokens:
+          description: |
+            The limit on the number of tokens used for single completion generation.
+            Must be greater than zero. This maximum allowed parameter value may depend on the model being used.
+          type: string
+          format: int64
+        reasoningOptions:
+          $ref: "#/components/schemas/ReasoningOptions"
+    ReasoningOptions:
+      description: |
+        Represents reasoning options that enable the model's ability to perform internal reasoning before generating a response.
+        Specifies the reasoning mode to be used.
+        REASONING_MODE_UNSPECIFIED: Unspecified reasoning mode.
+        DISABLED: Disables reasoning. The model will generate a response without performing any internal reasoning.
+        ENABLED_HIDDEN: Enables reasoning in a hidden manner without exposing the reasoning steps to the user.
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+            - REASONING_MODE_UNSPECIFIED
+            - DISABLED
+            - ENABLED_HIDDEN
+    CompletionResponse:
+      description: Generate text completions response
+      type: object
+      required:
+        - alternatives
+      properties:
+        result:
+          type: object
+          properties:
+            alternatives:
+              description: A list of generated completion alternatives.
+              type: array
+              items:
+                $ref: "#/components/schemas/Alternative"
+            usage:
+              $ref: "#/components/schemas/ContentUsage"
+            modelVersion:
+              description: The model version changes with each new releases.
+              type: string
+    Alternative:
+      description: Represents a generated completion alternative, including its content and generation status.
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          $ref: "#/components/schemas/Message"
+        status:
+          description: |
+            The generation status of the alternative.
+            ALTERNATIVE_STATUS_UNSPECIFIED: Unspecified generation status.
+            ALTERNATIVE_STATUS_PARTIAL: Partially generated alternative.
+            ALTERNATIVE_STATUS_TRUNCATED_FINAL: Incomplete final alternative resulting from reaching the maximum allowed number of tokens.
+            ALTERNATIVE_STATUS_FINAL: Final alternative generated without running into any limits.
+            ALTERNATIVE_STATUS_CONTENT_FILTER: Generation was stopped due to the discovery of potentially sensitive content in the prompt or generated response. 
+            To fix, modify the prompt and restart generation.
+            ALTERNATIVE_STATUS_TOOL_CALLS: Tools were invoked during the completion generation.
+          type: string
+          enum:
+            - ALTERNATIVE_STATUS_UNSPECIFIED
+            - ALTERNATIVE_STATUS_PARTIAL
+            - ALTERNATIVE_STATUS_TRUNCATED_FINAL
+            - ALTERNATIVE_STATUS_FINAL
+            - ALTERNATIVE_STATUS_CONTENT_FILTER
+            - ALTERNATIVE_STATUS_TOOL_CALLS
+    Message:
+      description: A message object representing a wrapper over the inputs and outputs of the completion model.
+      type: object
+      required:
+        - role
+        - text
+      properties:
+        role:
+          $ref: "#/components/schemas/MessageRole"
+        text:
+          description: Textual content of the message
+          type: string
+    MessageRole:
+      description: The ID of the message sender
+      type: string
+      enum:
+        - system
+        - user
+        - assistant
+    ContentUsage:
+      description: An object representing the number of content tokens used by the completion model.
+      type: object
+      properties:
+        inputTextTokens:
+          description: The number of tokens in the textual part of the model input.
+          type: string
+          format: int64
+        completionTokens:
+          description: The number of tokens in the generated completion.
+          type: string
+          format: int64
+        totalTokens:
+          description: The total number of tokens, including all input tokens and all generated tokens.
+          type: string
+          format: int64
