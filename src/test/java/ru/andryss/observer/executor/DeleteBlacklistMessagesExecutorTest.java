@@ -60,8 +60,6 @@ class DeleteBlacklistMessagesExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessEmptyBlacklist() {
-        keyStorageService.put("deleteBlacklistMessagesExecutor.active", true);
-
         executor.process(buildUpdate(), sender);
 
         Mockito.verifyNoMoreInteractions(sender);
@@ -70,7 +68,6 @@ class DeleteBlacklistMessagesExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessNotInBlacklist() {
-        keyStorageService.put("deleteBlacklistMessagesExecutor.active", true);
         keyStorageService.put("deleteBlacklistMessagesExecutor.blacklist", List.of(111L));
 
         executor.process(buildUpdate(), sender);
@@ -81,7 +78,6 @@ class DeleteBlacklistMessagesExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessUserInBlacklist() {
-        keyStorageService.put("deleteBlacklistMessagesExecutor.active", true);
         keyStorageService.put("deleteBlacklistMessagesExecutor.blacklist", List.of(123L));
 
         executor.process(buildUpdate(), sender);
