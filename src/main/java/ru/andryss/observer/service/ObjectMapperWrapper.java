@@ -31,8 +31,7 @@ public class ObjectMapperWrapper {
      * Deserialize object from JSON string
      */
     @SneakyThrows
-    public <T> T readValue(String data) {
-        return mapper.readValue(data, new TypeReference<>() {
-        });
+    public <T> T readValue(String data, TypeReference<T> reference) {
+        return mapper.readValue(data, reference);
     }
 }

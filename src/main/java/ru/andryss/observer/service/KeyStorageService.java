@@ -2,6 +2,7 @@ package ru.andryss.observer.service;
 
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.andryss.observer.repository.KeyStorageRepository;
@@ -28,10 +29,19 @@ public class KeyStorageService {
      * Get value by key. If key doesn't have value - return default value
      */
     public <T> T get(String key, T defaultValue) {
+        return get(key, defaultValue, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * Get value by key with special type. If key doesn't have value - return default value.
+     * Use this method only if {@link KeyStorageService#get(String, Object)} fails with types
+     */
+    public <T> T get(String key, T defaultValue, TypeReference<T> type) {
         Optional<String> optional = keyStorageRepository.get(key);
         if (optional.isEmpty()) {
             return defaultValue;
         }
-        return objectMapper.readValue(optional.get());
+        return objectMapper.readValue(optional.get(), type);
     }
 }

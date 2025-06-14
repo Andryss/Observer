@@ -2,6 +2,7 @@ package ru.andryss.observer.executor;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
@@ -31,10 +32,10 @@ public class DeleteBlacklistMessagesExecutor implements UpdateExecutor {
         Message message = update.getMessage();
         Long senderId = message.getFrom().getId();
 
-        // TODO: fix List<Long> parsing
-        List<Integer> blacklist = keyStorageService.get("deleteBlacklistMessagesExecutor.blacklist", List.of());
+        List<Long> blacklist = keyStorageService.get("deleteBlacklistMessagesExecutor.blacklist", List.of(),
+                new TypeReference<>() {});
 
-        if (blacklist.contains(senderId.intValue())) {
+        if (blacklist.contains(senderId)) {
             Long chatId = message.getChatId();
             Integer messageId = message.getMessageId();
             sender.execute(new DeleteMessage(chatId.toString(), messageId));
