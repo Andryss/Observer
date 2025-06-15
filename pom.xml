@@ -129,6 +129,8 @@
                             <apiPackage>ru.andryss.observer.generated.yandexgpt.api</apiPackage>
                             <modelPackage>ru.andryss.observer.generated.yandexgpt.model</modelPackage>
                             <invokerPackage>ru.andryss.observer.generated.yandexgpt.invoker</invokerPackage>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
                             <configOptions>
                                 <library>resttemplate</library>
                                 <useJakartaEe>true</useJakartaEe>

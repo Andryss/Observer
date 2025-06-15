@@ -16,7 +16,7 @@ tags:
     description: Yandex GPT API
 
 security:
-  - bearerAuth: []
+  - apiKeyAuth: []
 
 paths:
   /foundationModels/v1/completion:
@@ -28,7 +28,7 @@ paths:
       externalDocs:
         url: https://yandex.cloud/ru/docs/foundation-models/text-generation/api-ref/TextGeneration/completion
       security:
-        - bearerAuth: []
+        - apiKeyAuth: []
       requestBody:
         content:
           application/json:
@@ -44,11 +44,11 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
-      description: Bearer token using an IAM yandex token (https://yandex.cloud/ru/docs/iam/operations/iam-token/create)
+    apiKeyAuth:
+      description: Service account API key (https://yandex.cloud/ru/docs/iam/operations/authentication/manage-api-keys)
       type: http
       scheme: Bearer
-      bearerFormat: IAM
+      bearerFormat: Api-Key
   schemas:
     CompletionRequest:
       description: Generate text completions request

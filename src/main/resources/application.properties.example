@@ -17,5 +17,5 @@ spring.liquibase.enabled=true
 spring.liquibase.change-log=classpath:/liquibase/db-changelog.xml
 
 ### yandex gpt settings
-yandexgpt.iamToken=YOUR_YANDEXGPT_TOKEN
+yandexgpt.apiKey=YOUR_YANDEXGPT_TOKEN
 yandexgpt.folderId=YOUR_YANDEXGPT_FOLDER

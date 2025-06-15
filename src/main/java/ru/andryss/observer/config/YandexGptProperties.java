@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties("yandexgpt")
 public class YandexGptProperties {
     @NotBlank
-    private String iamToken;
+    private String apiKey;
     @NotBlank
     private String folderId;
 }

@@ -29,7 +29,7 @@ class YandexGptFacadeTest {
         yandexGptApi = Mockito.mock(YandexGptApi.class);
 
         YandexGptProperties properties = new YandexGptProperties();
-        properties.setIamToken("mock-token");
+        properties.setApiKey("mock-token");
         properties.setFolderId("mock-folder");
 
         yandexGptFacade = new YandexGptFacade(properties, yandexGptApi);
