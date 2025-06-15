@@ -32,7 +32,7 @@ public class ManualYandexGptApiTest extends BaseDbTest {
         YandexGptApi yandexGptApi = initApi();
 
         CompletionRequest request = new CompletionRequest()
-                .modelUri("gpt://%s/yandexgpt".formatted(FOLDER_ID))
+                .modelUri("gpt://%s/yandexgpt-lite/latest".formatted(FOLDER_ID))
                 .completionOptions(new CompletionOptions()
                         .stream(false)
                         .temperature(0.3)

@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.andryss.observer.config.YandexGptProperties;
 import ru.andryss.observer.facade.YandexGptFacade;
 import ru.andryss.observer.model.ChatContextEntity;
 import ru.andryss.observer.model.MessageDto;
@@ -22,17 +23,10 @@ import ru.andryss.observer.repository.ChatContextRepository;
 @RequiredArgsConstructor
 public class GptModelService {
 
-    private static final String DEFAULT_MODEL_INSTRUCTIONS = """
-            Будь как хороший друг — общайся просто, по-человечески, без официоза.
-            Отвечай кратко и по сути, не больше пары предложений, не занудствуй.
-            Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
-            Не строй из себя всезнайку.
-            """;
-    private static final int DEFAULT_MESSAGE_COUNT_CONTEXT_WINDOW = 11;
-
     private final ChatContextRepository chatContextRepository;
     private final YandexGptFacade yandexGptFacade;
     private final Clock clock;
+    private final YandexGptProperties properties;
 
     /**
      * Handle user chat message and return model answer
@@ -51,7 +45,7 @@ public class GptModelService {
         newMessagesContext.add(userMessage);
         newMessagesContext.add(new MessageDto(MessageRole.ASSISTANT, response));
 
-        while (newMessagesContext.size() > DEFAULT_MESSAGE_COUNT_CONTEXT_WINDOW) {
+        while (newMessagesContext.size() > properties.getContextMessagesCount()) {
             // remove message from index 1 to save first instruction message
             newMessagesContext.remove(1);
         }
@@ -69,7 +63,7 @@ public class GptModelService {
         ChatContextEntity context = new ChatContextEntity();
         context.setChatId(chatId);
         context.setMessages(List.of(
-                new MessageDto(MessageRole.SYSTEM, DEFAULT_MODEL_INSTRUCTIONS)
+                new MessageDto(MessageRole.SYSTEM, properties.getDefaultModelInstruction())
         ));
         Instant now = Instant.now(clock);
         context.setUpdatedAt(now);

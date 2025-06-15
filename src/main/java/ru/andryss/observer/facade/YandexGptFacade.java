@@ -24,10 +24,6 @@ import ru.andryss.observer.model.MessageDto;
 @RequiredArgsConstructor
 public class YandexGptFacade {
 
-    private static final String MODEL_URI_TEMPLATE = "gpt://%s/yandexgpt";
-    private static final double DEFAULT_MODEL_TEMPERATURE = 0.7;
-    private static final String DEFAULT_MODEL_MAX_TOKENS = "200";
-
     private final YandexGptProperties properties;
     private final YandexGptApi yandexGptApi;
 
@@ -43,11 +39,11 @@ public class YandexGptFacade {
         messages.add(mapMessage(userMessage));
 
         CompletionRequest request = new CompletionRequest()
-                .modelUri(MODEL_URI_TEMPLATE.formatted(properties.getFolderId()))
+                .modelUri(properties.getModelUri())
                 .completionOptions(new CompletionOptions()
                         .stream(false)
-                        .temperature(DEFAULT_MODEL_TEMPERATURE)
-                        .maxTokens(DEFAULT_MODEL_MAX_TOKENS)
+                        .temperature(properties.getDefaultModelTemperature().doubleValue())
+                        .maxTokens(String.valueOf(properties.getDefaultModelMaxTokens()))
                         .reasoningOptions(new ReasoningOptions()
                                 .mode(ModeEnum.DISABLED)
                         )

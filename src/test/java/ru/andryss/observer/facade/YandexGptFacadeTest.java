@@ -1,5 +1,6 @@
 package ru.andryss.observer.facade;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
@@ -30,7 +31,10 @@ class YandexGptFacadeTest {
 
         YandexGptProperties properties = new YandexGptProperties();
         properties.setApiKey("mock-token");
-        properties.setFolderId("mock-folder");
+        properties.setModelUri("mock-model-uri");
+        properties.setDefaultModelInstruction("some-instuction");
+        properties.setDefaultModelTemperature(new BigDecimal("0.999"));
+        properties.setDefaultModelMaxTokens(1);
 
         yandexGptFacade = new YandexGptFacade(properties, yandexGptApi);
     }
@@ -88,11 +92,11 @@ class YandexGptFacadeTest {
 
     private void verifyCreateCompletion() {
         Mockito.verify(yandexGptApi).foundationModelsV1CompletionPost(new CompletionRequest()
-                .modelUri("gpt://mock-folder/yandexgpt")
+                .modelUri("mock-model-uri")
                 .completionOptions(new CompletionOptions()
                         .stream(false)
-                        .temperature(0.7)
-                        .maxTokens("200")
+                        .temperature(0.999)
+                        .maxTokens("1")
                         .reasoningOptions(new ReasoningOptions()
                                 .mode(ModeEnum.DISABLED)
                         )

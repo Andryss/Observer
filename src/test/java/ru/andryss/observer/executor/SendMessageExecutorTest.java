@@ -20,23 +20,18 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.andryss.observer.BaseDbTest;
 import ru.andryss.observer.generated.yandexgpt.api.YandexGptApi;
 import ru.andryss.observer.generated.yandexgpt.model.Alternative;
+import ru.andryss.observer.generated.yandexgpt.model.CompletionOptions;
 import ru.andryss.observer.generated.yandexgpt.model.CompletionRequest;
 import ru.andryss.observer.generated.yandexgpt.model.CompletionResponse;
 import ru.andryss.observer.generated.yandexgpt.model.CompletionResponseResult;
 import ru.andryss.observer.generated.yandexgpt.model.MessageRole;
+import ru.andryss.observer.generated.yandexgpt.model.ReasoningOptions;
 import ru.andryss.observer.service.KeyStorageService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
 class SendMessageExecutorTest extends BaseDbTest {
-
-    private static final String SYSTEM_INSTRUCTION_TEXT = """
-            Будь как хороший друг — общайся просто, по-человечески, без официоза.
-            Отвечай кратко и по сути, не больше пары предложений, не занудствуй.
-            Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
-            Не строй из себя всезнайку.
-            """;
 
     @Autowired
     SendMessageExecutor executor;
@@ -98,21 +93,21 @@ class SendMessageExecutorTest extends BaseDbTest {
 
     @Test
     void testCanProcessAllowedChatsIsEmpty() {
-        Assertions.assertThat(executor.canProcess(buildUpdate())).isFalse();
+        Assertions.assertThat(executor.canProcess(buildUpdate(""))).isFalse();
     }
 
     @Test
     void testCanProcessChatNotInAllowedChats() {
         keyStorageService.put("sendMessageExecutor.allowedChats", List.of(456L));
 
-        Assertions.assertThat(executor.canProcess(buildUpdate())).isFalse();
+        Assertions.assertThat(executor.canProcess(buildUpdate(""))).isFalse();
     }
 
     @Test
     void testCanProcessChatInAllowedChats() {
         keyStorageService.put("sendMessageExecutor.allowedChats", List.of(123L));
 
-        Assertions.assertThat(executor.canProcess(buildUpdate())).isTrue();
+        Assertions.assertThat(executor.canProcess(buildUpdate("not-empty"))).isTrue();
     }
 
     @Test
@@ -120,15 +115,11 @@ class SendMessageExecutorTest extends BaseDbTest {
     void testProcessMessageSent() {
         mockYandexGptApiResponse();
 
-        executor.process(buildUpdate(), sender);
+        executor.process(buildUpdate("some-text"), sender);
 
         verifyYandexGptApiRequest(1,
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.SYSTEM)
-                        .text(SYSTEM_INSTRUCTION_TEXT),
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.USER)
-                        .text("some-text")
+                systemInstructionMessage(),
+                userMessage("some-text")
         );
         verifyTypingEventSent(1);
         verifyMessageSent(1);
@@ -141,22 +132,14 @@ class SendMessageExecutorTest extends BaseDbTest {
     void testProcessWithContextSaved() {
         mockYandexGptApiResponse();
 
-        executor.process(buildUpdate(), sender);
-        executor.process(buildUpdate(), sender);
+        executor.process(buildUpdate("some-text-1"), sender);
+        executor.process(buildUpdate("some-text-2"), sender);
 
         verifyYandexGptApiRequest(2,
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.SYSTEM)
-                        .text(SYSTEM_INSTRUCTION_TEXT),
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.USER)
-                        .text("some-text"),
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.ASSISTANT)
-                        .text("some response"),
-                new ru.andryss.observer.generated.yandexgpt.model.Message()
-                        .role(MessageRole.USER)
-                        .text("some-text")
+                systemInstructionMessage(),
+                userMessage("some-text-1"),
+                assistantResponse(),
+                userMessage("some-text-2")
         );
         verifyTypingEventSent(2);
         verifyMessageSent(2);
@@ -164,14 +147,38 @@ class SendMessageExecutorTest extends BaseDbTest {
         verifyNoMoreMocksInteractions();
     }
 
-    private static Update buildUpdate() {
+    @Test
+    @SneakyThrows
+    void testProcessWithOldContextCleared() {
+        mockYandexGptApiResponse();
+
+        executor.process(buildUpdate("some-text-1"), sender);
+        executor.process(buildUpdate("some-text-2"), sender);
+        executor.process(buildUpdate("some-text-3"), sender);
+        executor.process(buildUpdate("some-text-4"), sender);
+
+        verifyYandexGptApiRequest(4,
+                systemInstructionMessage(),
+                userMessage("some-text-2"),
+                assistantResponse(),
+                userMessage("some-text-3"),
+                assistantResponse(),
+                userMessage("some-text-4")
+        );
+        verifyTypingEventSent(4);
+        verifyMessageSent(4);
+
+        verifyNoMoreMocksInteractions();
+    }
+
+    private static Update buildUpdate(String text) {
         Chat chat = new Chat();
         chat.setId(123L);
         chat.setType("private");
 
         Message message = new Message();
         message.setMessageId(456);
-        message.setText("some-text");
+        message.setText(text);
         message.setChat(chat);
 
         Update update = new Update();
@@ -195,10 +202,18 @@ class SendMessageExecutorTest extends BaseDbTest {
     }
 
     private void verifyYandexGptApiRequest(int count, ru.andryss.observer.generated.yandexgpt.model.Message... messages) {
-        ArgumentCaptor<CompletionRequest> completionCaptor = ArgumentCaptor.forClass(CompletionRequest.class);
-        Mockito.verify(yandexGptApi, times(count)).foundationModelsV1CompletionPost(completionCaptor.capture());
-        Assertions.assertThat(completionCaptor.getValue()).satisfies(request ->
-                Assertions.assertThat(request.getMessages()).containsExactly(messages)
+        Mockito.verify(yandexGptApi, times(count)).foundationModelsV1CompletionPost(any());
+        Mockito.verify(yandexGptApi).foundationModelsV1CompletionPost(new CompletionRequest()
+                .modelUri("mock-model-uri")
+                .completionOptions(new CompletionOptions()
+                        .stream(false)
+                        .temperature(0.111)
+                        .maxTokens("2")
+                        .reasoningOptions(new ReasoningOptions()
+                                .mode(ReasoningOptions.ModeEnum.DISABLED)
+                        )
+                )
+                .messages(List.of(messages))
         );
     }
 
@@ -237,5 +252,21 @@ class SendMessageExecutorTest extends BaseDbTest {
     private void verifyNoMoreMocksInteractions() {
         Mockito.verifyNoMoreInteractions(yandexGptApi);
         Mockito.verifyNoMoreInteractions(sender);
+    }
+
+    private static ru.andryss.observer.generated.yandexgpt.model.Message systemInstructionMessage() {
+        return message(MessageRole.SYSTEM, "mock-model-instruction");
+    }
+
+    private static ru.andryss.observer.generated.yandexgpt.model.Message userMessage(String text) {
+        return message(MessageRole.USER, text);
+    }
+
+    private static ru.andryss.observer.generated.yandexgpt.model.Message assistantResponse() {
+        return message(MessageRole.ASSISTANT, "some response");
+    }
+
+    private static ru.andryss.observer.generated.yandexgpt.model.Message message(MessageRole user, String text) {
+        return new ru.andryss.observer.generated.yandexgpt.model.Message().role(user).text(text);
     }
 }
