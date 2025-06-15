@@ -1,6 +1,5 @@
 package ru.andryss.observer;
 
-import java.time.Instant;
 import java.util.List;
 
 import lombok.SneakyThrows;
@@ -17,6 +16,7 @@ import ru.andryss.observer.executor.UpdateExecutor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static ru.andryss.observer.executor.TestClockConfig.EPOCH_SECONDS;
 
 class UpdateDispatcherTest extends BaseDbTest {
 
@@ -100,7 +100,7 @@ class UpdateDispatcherTest extends BaseDbTest {
     @Test
     void testNewMessageUpdate() {
         Message message = new Message();
-        message.setDate((int) (Instant.now().toEpochMilli() / 1000));
+        message.setDate(EPOCH_SECONDS - 60);
 
         Update update = new Update();
         update.setMessage(message);
@@ -114,7 +114,7 @@ class UpdateDispatcherTest extends BaseDbTest {
     @Test
     void testOldMessageUpdate() {
         Message message = new Message();
-        message.setDate((int) (Instant.now().toEpochMilli() / 1000 - 60));
+        message.setDate(EPOCH_SECONDS - 61);
 
         Update update = new Update();
         update.setMessage(message);

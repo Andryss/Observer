@@ -1,5 +1,6 @@
 package ru.andryss.observer.service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class GptModelService {
 
     private final ChatContextRepository chatContextRepository;
     private final YandexGptFacade yandexGptFacade;
+    private final Clock clock;
 
     /**
      * Handle user chat message and return model answer
@@ -69,8 +71,9 @@ public class GptModelService {
         context.setMessages(List.of(
                 new MessageDto(MessageRole.SYSTEM, DEFAULT_MODEL_INSTRUCTIONS)
         ));
-        context.setUpdatedAt(Instant.now()); // TODO: migrate to clock
-        context.setCreatedAt(Instant.now()); // TODO: migrate to clock
+        Instant now = Instant.now(clock);
+        context.setUpdatedAt(now);
+        context.setCreatedAt(now);
         return context;
     }
 }

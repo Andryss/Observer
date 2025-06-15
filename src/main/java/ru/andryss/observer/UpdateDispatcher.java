@@ -1,5 +1,6 @@
 package ru.andryss.observer;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
@@ -17,14 +18,17 @@ public class UpdateDispatcher extends TelegramLongPollingBot {
 
     private final BotProperties properties;
     private final List<UpdateExecutor> executors;
+    private final Clock clock;
 
     public UpdateDispatcher(
             BotProperties botProperties,
-            List<UpdateExecutor> executors
+            List<UpdateExecutor> executors,
+            Clock clock
     ) {
         super(botProperties.getToken());
         this.properties = botProperties;
         this.executors = executors;
+        this.clock = clock;
     }
 
     @Override
@@ -63,7 +67,7 @@ public class UpdateDispatcher extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             Message message = update.getMessage();
             Instant messageTimestamp = Instant.ofEpochSecond(message.getDate());
-            if (messageTimestamp.isBefore(Instant.now().minusSeconds(properties.getExpirationSeconds()))) {
+            if (messageTimestamp.isBefore(Instant.now(clock).minusSeconds(properties.getExpirationSeconds()))) {
                 log.info("Update {} message is too old {}, skipping", update.getUpdateId(), messageTimestamp);
                 return true;
             }

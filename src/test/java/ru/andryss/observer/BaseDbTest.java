@@ -4,6 +4,7 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import ru.andryss.observer.executor.TestClockConfig;
 
 @SpringBootTest
 @ActiveProfiles("functionalTest")
@@ -12,6 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
         type = AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES,
         provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY
 )
-@Import(MockBeansConfig.class)
+@Import({MockBeansConfig.class, TestClockConfig.class})
 public abstract class BaseDbTest {
 }
