@@ -26,7 +26,7 @@ public class YandexGptProperties {
     @NotBlank
     private String apiKey;
     @NotBlank
-    private String modelUri = "yandexgpt-lite/latest";
+    private String modelUri;
     @Min(3)
     private int contextMessagesCount = 21;
     @NotBlank
