@@ -31,20 +31,11 @@ public class SendMessageExecutor implements UpdateExecutor {
 
     @Override
     public boolean canProcess(Update update) {
-        if (!update.hasMessage()) {
-            return false;
-        }
-        Message message = update.getMessage();
-        if (!message.hasText()) {
-            return false;
-        }
-        if (!Objects.equals(message.getChat().getType(), "private")){
-            return false;
-        }
-        Long chatId = message.getChatId();
-        List<Long> allowedChats = keyStorageService.get("sendMessageExecutor.allowedChats", List.of(),
-                new TypeReference<>() {});
-        return allowedChats.contains(chatId);
+        return update.hasMessage() &&
+                update.getMessage().hasText() &&
+                Objects.equals(update.getMessage().getChat().getType(), "private") &&
+                keyStorageService.<List<Long>>get("sendMessageExecutor.allowedChats", List.of(),
+                        new TypeReference<>() {}).contains(update.getMessage().getChatId());
     }
 
     @Override
