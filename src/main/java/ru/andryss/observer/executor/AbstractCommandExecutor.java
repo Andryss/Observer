@@ -7,6 +7,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 public abstract class AbstractCommandExecutor implements UpdateExecutor {
 
+    /**
+     * Returns object describing command. See {@link CommandInfo}
+     */
     public abstract CommandInfo getCommandInfo();
 
     @Override
@@ -25,6 +28,10 @@ public abstract class AbstractCommandExecutor implements UpdateExecutor {
         return tagIndex == -1 ? text : text.substring(0, tagIndex);
     }
 
+    /**
+     * Record object describing bot command
+     * @param command name of the command including leading slash (e.g. "/help")
+     */
     public record CommandInfo(String command) {
     }
 }

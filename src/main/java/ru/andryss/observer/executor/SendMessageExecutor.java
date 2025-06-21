@@ -10,9 +10,11 @@ import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.andryss.observer.model.MessageDto;
+import ru.andryss.observer.service.BotUserInfoProviderService;
 import ru.andryss.observer.service.GptModelService;
 import ru.andryss.observer.service.KeyStorageService;
 
@@ -22,6 +24,7 @@ public class SendMessageExecutor implements UpdateExecutor {
 
     private final KeyStorageService keyStorageService;
     private final GptModelService gptModelService;
+    private final BotUserInfoProviderService butUserProvider;
 
 
     @Override
@@ -33,7 +36,7 @@ public class SendMessageExecutor implements UpdateExecutor {
     public boolean canProcess(Update update) {
         return update.hasMessage() &&
                 update.getMessage().hasText() &&
-                Objects.equals(update.getMessage().getChat().getType(), "private") &&
+                needToAnswerToMessage(update) &&
                 keyStorageService.<List<Long>>get("sendMessageExecutor.allowedChats", List.of(),
                         new TypeReference<>() {}).contains(update.getMessage().getChatId());
     }
@@ -57,5 +60,26 @@ public class SendMessageExecutor implements UpdateExecutor {
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setAllowSendingWithoutReply(true);
         sender.execute(sendMessage);
+    }
+
+    private boolean needToAnswerToMessage(Update update) {
+        return Objects.equals(update.getMessage().getChat().getType(), "private") ||
+                (Objects.equals(update.getMessage().getChat().getType(), "supergroup") &&
+                        (update.getMessage().getReplyToMessage() != null &&
+                                Objects.equals(update.getMessage().getReplyToMessage().getFrom().getId(),
+                                        butUserProvider.getBotUser().getId())
+                        ) ||
+                        (update.getMessage().hasEntities() &&
+                                update.getMessage().getEntities().stream()
+                                        .filter(entity -> Objects.equals("mention", entity.getType()))
+                                        .map(this::extractMention)
+                                        .anyMatch(mention -> butUserProvider.getBotUser().getUserName().equals(mention))
+
+                        )
+                );
+    }
+
+    private String extractMention(MessageEntity entity) {
+        return entity.getText().substring(1);
     }
 }

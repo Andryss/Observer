@@ -10,11 +10,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.telegram.telegrambots.meta.api.methods.GetMe;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.andryss.observer.BaseDbTest;
@@ -46,8 +49,15 @@ class SendMessageExecutorTest extends BaseDbTest {
     AbsSender sender;
 
     @BeforeEach
+    @SneakyThrows
     void before() {
         Mockito.clearInvocations(yandexGptApi);
+
+        User user = new User();
+        user.setId(333L);
+        user.setUserName("observer_bot");
+        Mockito.when(sender.execute(Mockito.<GetMe>any()))
+                .thenReturn(user);
     }
 
     @Test
@@ -79,12 +89,80 @@ class SendMessageExecutorTest extends BaseDbTest {
     }
 
     @Test
-    void testCanProcessNotPrivateMessage() {
+    void testCanProcessSupergroupMessage() {
         Chat chat = new Chat();
         chat.setType("supergroup");
         Message message = new Message();
         message.setText("some-text");
         message.setChat(chat);
+        Update update = new Update();
+        update.setMessage(message);
+
+        Assertions.assertThat(executor.canProcess(update)).isFalse();
+    }
+
+    @Test
+    void testCanProcessNonSpecialGroupMessage() {
+        Chat chat = new Chat();
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("some-text");
+        message.setChat(chat);
+        Update update = new Update();
+        update.setMessage(message);
+
+        Assertions.assertThat(executor.canProcess(update)).isFalse();
+    }
+
+    @Test
+    @SneakyThrows
+    void testCanProcessGroupMessageRepliedToNonBot() {
+        User replyUser = new User();
+        replyUser.setId(-333L);
+        Message replyMessage = new Message();
+        replyMessage.setFrom(replyUser);
+        Chat chat = new Chat();
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("some-text");
+        message.setChat(chat);
+        message.setReplyToMessage(replyMessage);
+        Update update = new Update();
+        update.setMessage(message);
+
+        Assertions.assertThat(executor.canProcess(update)).isFalse();
+    }
+
+    @Test
+    void testCanProcessGroupMessageHasNoMention() {
+        Chat chat = new Chat();
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("/commandd #hashtag $USD https://url.com hi!");
+        message.setChat(chat);
+        message.setEntities(List.of(
+                new MessageEntity("bot_command", 0, 9),
+                new MessageEntity("hashtag", 10, 8),
+                new MessageEntity("cashtag", 19, 4),
+                new MessageEntity("url", 24, 15)
+        ));
+        Update update = new Update();
+        update.setMessage(message);
+
+        Assertions.assertThat(executor.canProcess(update)).isFalse();
+    }
+
+    @Test
+    @SneakyThrows
+    void testCanProcessGroupMessageHasAnotherUserMention() {
+        Chat chat = new Chat();
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("@observer_bott");
+        message.setChat(chat);
+        message.setEntities(List.of(
+                new MessageEntity("mention", 0, 14)
+        ));
         Update update = new Update();
         update.setMessage(message);
 
@@ -100,14 +178,56 @@ class SendMessageExecutorTest extends BaseDbTest {
     void testCanProcessChatNotInAllowedChats() {
         keyStorageService.put("sendMessageExecutor.allowedChats", List.of(456L));
 
-        Assertions.assertThat(executor.canProcess(buildUpdate(""))).isFalse();
+        Assertions.assertThat(executor.canProcess(buildUpdate("not-empty"))).isFalse();
     }
 
     @Test
-    void testCanProcessChatInAllowedChats() {
+    void testCanProcessPrivateMessage() {
         keyStorageService.put("sendMessageExecutor.allowedChats", List.of(123L));
 
         Assertions.assertThat(executor.canProcess(buildUpdate("not-empty"))).isTrue();
+    }
+
+    @Test
+    @SneakyThrows
+    void testCanProcessGroupMessageRepliedToBot() {
+        User replyUser = new User();
+        replyUser.setId(333L);
+        Message replyMessage = new Message();
+        replyMessage.setFrom(replyUser);
+        Chat chat = new Chat();
+        chat.setId(123L);
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("some-text");
+        message.setChat(chat);
+        message.setReplyToMessage(replyMessage);
+        Update update = new Update();
+        update.setMessage(message);
+
+        keyStorageService.put("sendMessageExecutor.allowedChats", List.of(123L));
+
+        Assertions.assertThat(executor.canProcess(update)).isTrue();
+    }
+
+    @Test
+    @SneakyThrows
+    void testCanProcessGroupMessageHasBotMention() {
+        Chat chat = new Chat();
+        chat.setId(123L);
+        chat.setType("supergroup");
+        Message message = new Message();
+        message.setText("@observer_bot");
+        message.setChat(chat);
+        message.setEntities(List.of(
+                new MessageEntity("mention", 0, 13)
+        ));
+        Update update = new Update();
+        update.setMessage(message);
+
+        keyStorageService.put("sendMessageExecutor.allowedChats", List.of(123L));
+
+        Assertions.assertThat(executor.canProcess(update)).isTrue();
     }
 
     @Test
