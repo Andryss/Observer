@@ -26,6 +26,9 @@
         <property name="ignorePattern" value="^package.*|^import.*"/>
     </module>
 
+    <!-- @SuppressWarnings -->
+    <module name="SuppressWarningsFilter"/>
+
     <module name="TreeWalker">
 
         <!-- Common file checks -->
