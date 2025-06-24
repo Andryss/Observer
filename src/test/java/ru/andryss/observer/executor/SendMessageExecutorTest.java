@@ -89,9 +89,9 @@ class SendMessageExecutorTest extends BaseDbTest {
     }
 
     @Test
-    void testCanProcessSupergroupMessage() {
+    void testCanProcessChannelMessage() {
         Chat chat = new Chat();
-        chat.setType("supergroup");
+        chat.setType("channel");
         Message message = new Message();
         message.setText("some-text");
         message.setChat(chat);

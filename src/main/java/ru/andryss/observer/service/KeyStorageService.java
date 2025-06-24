@@ -26,16 +26,7 @@ public class KeyStorageService {
     }
 
     /**
-     * Get value by key. If key doesn't have value - return default value
-     */
-    public <T> T get(String key, T defaultValue) {
-        return get(key, defaultValue, new TypeReference<>() {
-        });
-    }
-
-    /**
-     * Get value by key with special type. If key doesn't have value - return default value.
-     * Use this method only if {@link KeyStorageService#get(String, Object)} fails with types
+     * Get value by key with special type. If key doesn't have value - return default value
      */
     public <T> T get(String key, T defaultValue, TypeReference<T> type) {
         Optional<String> optional = keyStorageRepository.get(key);

@@ -2,24 +2,26 @@ package ru.andryss.observer.executor;
 
 import java.util.List;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.andryss.observer.service.KeyStorageService;
+import ru.andryss.observer.model.ConfigKey;
+import ru.andryss.observer.service.ConfigService;
+
+import static ru.andryss.observer.model.ConfigKey.BLACKLIST_USER_IDS;
 
 @Component
 @RequiredArgsConstructor
 public class DeleteBlacklistMessagesExecutor implements UpdateExecutor {
 
-    private final KeyStorageService keyStorageService;
+    private final ConfigService configService;
 
     @Override
     public boolean isActive() {
-        return keyStorageService.get("deleteBlacklistMessagesExecutor.active", false);
+        return configService.getBoolean(ConfigKey.DELETE_BLACKLIST_MESSAGES_EXECUTOR_ACTIVE);
     }
 
     @Override
@@ -32,8 +34,7 @@ public class DeleteBlacklistMessagesExecutor implements UpdateExecutor {
         Message message = update.getMessage();
         Long senderId = message.getFrom().getId();
 
-        List<Long> blacklist = keyStorageService.get("deleteBlacklistMessagesExecutor.blacklist", List.of(),
-                new TypeReference<>() {});
+        List<Long> blacklist = configService.getLongList(BLACKLIST_USER_IDS);
 
         if (blacklist.contains(senderId)) {
             Long chatId = message.getChatId();

@@ -6,20 +6,22 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.andryss.observer.service.KeyStorageService;
+import ru.andryss.observer.service.ConfigService;
+
+import static ru.andryss.observer.model.ConfigKey.GET_CHAT_ID_COMMAND_EXECUTOR_ACTIVE;
 
 @Component
 @RequiredArgsConstructor
 public class GetChatIdCommandExecutor extends AbstractCommandExecutor {
 
-    private final KeyStorageService keyStorageService;
+    private final ConfigService configService;
 
     @Getter
     private final CommandInfo commandInfo = new CommandInfo("/chatid");
 
     @Override
     public boolean isActive() {
-        return keyStorageService.get("getChatIdCommandExecutor.active", false);
+        return configService.getBoolean(GET_CHAT_ID_COMMAND_EXECUTOR_ACTIVE);
     }
 
     @Override

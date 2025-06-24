@@ -1,9 +1,7 @@
 package ru.andryss.observer.executor;
 
-import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.ActionType;
@@ -15,21 +13,24 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.andryss.observer.model.MessageDto;
 import ru.andryss.observer.service.BotUserInfoProviderService;
+import ru.andryss.observer.service.ConfigService;
 import ru.andryss.observer.service.GptModelService;
-import ru.andryss.observer.service.KeyStorageService;
+
+import static ru.andryss.observer.model.ConfigKey.SEND_MESSAGE_ALLOWED_CHATS;
+import static ru.andryss.observer.model.ConfigKey.SEND_MESSAGE_EXECUTOR_ACTIVE;
 
 @Component
 @RequiredArgsConstructor
 public class SendMessageExecutor implements UpdateExecutor {
 
-    private final KeyStorageService keyStorageService;
+    private final ConfigService configService;
     private final GptModelService gptModelService;
     private final BotUserInfoProviderService butUserProvider;
 
 
     @Override
     public boolean isActive() {
-        return keyStorageService.get("sendMessageExecutor.active", false);
+        return configService.getBoolean(SEND_MESSAGE_EXECUTOR_ACTIVE);
     }
 
     @Override
@@ -37,8 +38,7 @@ public class SendMessageExecutor implements UpdateExecutor {
         return update.hasMessage() &&
                 update.getMessage().hasText() &&
                 needToAnswerToMessage(update) &&
-                keyStorageService.<List<Long>>get("sendMessageExecutor.allowedChats", List.of(),
-                        new TypeReference<>() {}).contains(update.getMessage().getChatId());
+                configService.getLongList(SEND_MESSAGE_ALLOWED_CHATS).contains(update.getMessage().getChatId());
     }
 
     @Override
@@ -62,6 +62,12 @@ public class SendMessageExecutor implements UpdateExecutor {
         sender.execute(sendMessage);
     }
 
+    /**
+     * Answers to:
+     * - all messages in private chats
+     * - in-group messages that replied to bot messages
+     * - in-group messages with bot mention
+     */
     private boolean needToAnswerToMessage(Update update) {
         return Objects.equals(update.getMessage().getChat().getType(), "private") ||
                 (Objects.equals(update.getMessage().getChat().getType(), "supergroup") &&

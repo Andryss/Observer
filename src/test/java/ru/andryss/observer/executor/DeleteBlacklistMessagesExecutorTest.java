@@ -78,7 +78,7 @@ class DeleteBlacklistMessagesExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessUserInBlacklist() {
-        keyStorageService.put("deleteBlacklistMessagesExecutor.blacklist", List.of(123L));
+        keyStorageService.put("blacklist.userIds", List.of(123L));
 
         executor.process(buildUpdate(), sender);
 
