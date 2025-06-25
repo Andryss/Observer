@@ -53,6 +53,14 @@ public enum ConfigKey {
     SEND_MESSAGE_ALLOWED_CHATS(
             "sendMessageExecutor.allowedChats",
             List.<Long>of(), new TypeReference<List<Long>>() {}
+    ),
+    CONFIG_COMMAND_EXECUTOR_ACTIVE(
+            "configCommandExecutor.active",
+            false, new TypeReference<Boolean>() {}
+    ),
+    ADMIN_USER_IDS(
+            "admin.userIds",
+            List.<Long>of(), new TypeReference<List<Long>>() {}
     );
 
     private final String key;
