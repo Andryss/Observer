@@ -37,6 +37,13 @@ public class ConfigService {
         return getInternal(key);
     }
 
+    /**
+     * Retrieves raw config value by key
+     */
+    public String getRawString(ConfigKey key) {
+        return keyStorageService.getString(key.getKey(), key.getDefaultValue());
+    }
+
     private <T> T getInternal(ConfigKey key) {
         Object defaultValue = key.getDefaultValue();
         //noinspection unchecked

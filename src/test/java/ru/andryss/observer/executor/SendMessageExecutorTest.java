@@ -307,7 +307,7 @@ class SendMessageExecutorTest extends BaseDbTest {
     }
 
     private void mockYandexGptApiResponse() {
-        Mockito.when(yandexGptApi.foundationModelsV1CompletionPost(any()))
+        Mockito.when(yandexGptApi.generateCompletions(any()))
                 .thenReturn(new CompletionResponse()
                         .result(new CompletionResponseResult()
                                 .addAlternativesItem(new Alternative()
@@ -322,8 +322,8 @@ class SendMessageExecutorTest extends BaseDbTest {
     }
 
     private void verifyYandexGptApiRequest(int count, ru.andryss.observer.generated.yandexgpt.model.Message... messages) {
-        Mockito.verify(yandexGptApi, times(count)).foundationModelsV1CompletionPost(any());
-        Mockito.verify(yandexGptApi).foundationModelsV1CompletionPost(new CompletionRequest()
+        Mockito.verify(yandexGptApi, times(count)).generateCompletions(any());
+        Mockito.verify(yandexGptApi).generateCompletions(new CompletionRequest()
                 .modelUri("mock-model-uri")
                 .completionOptions(new CompletionOptions()
                         .stream(false)

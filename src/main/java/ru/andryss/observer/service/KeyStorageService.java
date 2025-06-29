@@ -29,10 +29,20 @@ public class KeyStorageService {
      * Get value by key with special type. If key doesn't have value - return default value
      */
     public <T> T get(String key, T defaultValue, TypeReference<T> type) {
-        Optional<String> optional = keyStorageRepository.get(key);
-        if (optional.isEmpty()) {
-            return defaultValue;
-        }
-        return objectMapper.readValue(optional.get(), type);
+        return getRawValue(key)
+                .map(value -> objectMapper.readValue(value, type))
+                .orElse(defaultValue);
+    }
+
+    /**
+     * Get value by key with special type. If key doesn't have value - return default value
+     */
+    public String getString(String key, Object defaultValue) {
+        return getRawValue(key)
+                .orElseGet(() -> objectMapper.writeValueAsString(defaultValue));
+    }
+
+    private Optional<String> getRawValue(String key) {
+        return keyStorageRepository.get(key);
     }
 }

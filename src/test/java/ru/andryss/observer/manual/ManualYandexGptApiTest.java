@@ -50,7 +50,7 @@ public class ManualYandexGptApiTest extends BaseDbTest {
                                 .text("Hi! How are you?")
                 ));
 
-        CompletionResponse response = yandexGptApi.foundationModelsV1CompletionPost(request);
+        CompletionResponse response = yandexGptApi.generateCompletions(request);
 
         log.info("{}", response);
     }

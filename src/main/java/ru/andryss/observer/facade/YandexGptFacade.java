@@ -50,7 +50,7 @@ public class YandexGptFacade {
                 )
                 .messages(messages);
 
-        CompletionResponse response = yandexGptApi.foundationModelsV1CompletionPost(request);
+        CompletionResponse response = yandexGptApi.generateCompletions(request);
 
         List<Alternative> alternatives = response.getResult().getAlternatives();
 

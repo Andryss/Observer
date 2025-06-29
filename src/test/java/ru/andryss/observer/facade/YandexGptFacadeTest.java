@@ -41,7 +41,7 @@ class YandexGptFacadeTest {
 
     @Test
     void testGenerateAlternativeSuccess() {
-        Mockito.when(yandexGptApi.foundationModelsV1CompletionPost(Mockito.any()))
+        Mockito.when(yandexGptApi.generateCompletions(Mockito.any()))
                 .thenReturn(new CompletionResponse()
                         .result(new CompletionResponseResult()
                                 .addAlternativesItem(new Alternative()
@@ -64,7 +64,7 @@ class YandexGptFacadeTest {
 
     @Test
     void testGenerateFailedWithNoAlternatives() {
-        Mockito.when(yandexGptApi.foundationModelsV1CompletionPost(Mockito.any()))
+        Mockito.when(yandexGptApi.generateCompletions(Mockito.any()))
                 .thenReturn(new CompletionResponse()
                         .result(new CompletionResponseResult()
                                 .modelVersion("0.0.1")
@@ -91,7 +91,7 @@ class YandexGptFacadeTest {
     }
 
     private void verifyCreateCompletion() {
-        Mockito.verify(yandexGptApi).foundationModelsV1CompletionPost(new CompletionRequest()
+        Mockito.verify(yandexGptApi).generateCompletions(new CompletionRequest()
                 .modelUri("mock-model-uri")
                 .completionOptions(new CompletionOptions()
                         .stream(false)

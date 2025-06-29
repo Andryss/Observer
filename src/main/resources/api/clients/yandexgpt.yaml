@@ -23,6 +23,7 @@ paths:
     post:
       summary: Generate text completions
       description: A method for generating text completions in synchronous mode.
+      operationId: generateCompletions
       tags:
         - YandexGpt
       externalDocs:
