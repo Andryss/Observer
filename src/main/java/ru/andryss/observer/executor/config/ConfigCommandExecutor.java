@@ -7,6 +7,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import ru.andryss.observer.service.ConfigService;
 import static ru.andryss.observer.model.ConfigKey.ADMIN_USER_IDS;
 import static ru.andryss.observer.model.ConfigKey.CONFIG_COMMAND_EXECUTOR_ACTIVE;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ConfigCommandExecutor extends AbstractCommandExecutor implements InitializingBean {
@@ -77,6 +79,7 @@ public class ConfigCommandExecutor extends AbstractCommandExecutor implements In
         try {
             command.execute(arguments, update, sender);
         } catch (Exception e) {
+            log.warn("Exception during config command execution", e);
             sender.execute(new SendMessage(message.getChatId().toString(), "ERROR: " + e.getMessage()));
         }
     }

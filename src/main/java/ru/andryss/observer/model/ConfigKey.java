@@ -1,5 +1,6 @@
 package ru.andryss.observer.model;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -66,4 +67,28 @@ public enum ConfigKey {
     private final String key;
     private final Object defaultValue;
     private final TypeReference<?> type;
+
+    /**
+     * Determines whether config key type is boolean or not
+     */
+    public static boolean isBooleanType(ConfigKey key) {
+        return key.getType().getType() == Boolean.class;
+    }
+
+    /**
+     * Determines whether config key type is string or not
+     */
+    public static boolean isStringType(ConfigKey key) {
+        return key.getType().getType() == String.class;
+    }
+
+    /**
+     * Determines whether config key type is long list or not
+     */
+    public static boolean isLongListType(ConfigKey key) {
+        return key.getType().getType() instanceof ParameterizedType parameterizedType &&
+                parameterizedType.getRawType() == List.class &&
+                parameterizedType.getActualTypeArguments().length == 1 &&
+                parameterizedType.getActualTypeArguments()[0] == Long.class;
+    }
 }

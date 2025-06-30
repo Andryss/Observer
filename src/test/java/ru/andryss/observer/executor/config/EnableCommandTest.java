@@ -23,18 +23,26 @@ class EnableCommandTest extends AbstractCommandTest {
 
     @Test
     @SneakyThrows
-    void testEnableBooleanValue() {
-        sendCommand("enable", "CONFIG_COMMAND_EXECUTOR_ACTIVE");
-
-        verifyMessageSent("OK");
-    }
-
-    @Test
-    @SneakyThrows
     void testEnableNotBooleanValue() {
         sendCommand("enable", "ADMIN_USER_IDS");
 
         verifyMessageSent("ERROR: ADMIN_USER_IDS is not boolean");
+    }
+
+    @Test
+    @SneakyThrows
+    void testEnableBooleanValue() {
+        sendCommand("enable", "CONFIG_COMMAND_EXECUTOR_ACTIVE");
+
+        verifyMessageSent("OK");
+
+        sendCommand("get", "CONFIG_COMMAND_EXECUTOR_ACTIVE");
+
+        verifyMessageSent(2, """
+                ```json
+                true
+                ```
+                """);
     }
 
 }

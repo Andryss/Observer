@@ -13,6 +13,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.andryss.observer.BaseDbTest;
 
+import static org.mockito.Mockito.times;
+
 class AbstractCommandTest extends BaseDbTest {
 
     @Autowired
@@ -36,8 +38,13 @@ class AbstractCommandTest extends BaseDbTest {
 
     @SneakyThrows
     void verifyMessageSent(String message) {
+        verifyMessageSent(1, message);
+    }
+
+    @SneakyThrows
+    void verifyMessageSent(int count, String message) {
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        Mockito.verify(sender).execute(sendMessageCaptor.capture());
+        Mockito.verify(sender, times(count)).execute(sendMessageCaptor.capture());
         Assertions.assertThat(sendMessageCaptor.getValue())
                 .extracting(
                         "chatId",
