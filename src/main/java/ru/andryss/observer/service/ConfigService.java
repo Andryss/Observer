@@ -31,6 +31,16 @@ public class ConfigService {
     }
 
     /**
+     * Sets boolean config value
+     */
+    public void putBoolean(ConfigKey key, boolean value) {
+        if (!(key.getDefaultValue() instanceof Boolean)) {
+            throw new IllegalArgumentException(key.name() + " is not boolean");
+        }
+        keyStorageService.put(key.getKey(), value);
+    }
+
+    /**
      * Retrieves long list config value by key
      */
     public List<Long> getLongList(ConfigKey key) {
