@@ -32,7 +32,6 @@ class YandexGptFacadeTest {
         YandexGptProperties properties = new YandexGptProperties();
         properties.setApiKey("mock-token");
         properties.setModelUri("mock-model-uri");
-        properties.setDefaultModelInstruction("some-instuction");
         properties.setDefaultModelTemperature(new BigDecimal("0.999"));
         properties.setDefaultModelMaxTokens(1);
 

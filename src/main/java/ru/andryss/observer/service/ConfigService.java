@@ -24,10 +24,16 @@ public class ConfigService {
      * Retrieves string config value by key
      */
     public String getString(ConfigKey key) {
-        if (!isStringType(key)) {
-            throw new IllegalArgumentException(key.name() + " is not string");
-        }
+        ensureStringType(key);
         return getInternal(key);
+    }
+
+    /**
+     * Sets string config value
+     */
+    public void putString(ConfigKey key, String value) {
+        ensureStringType(key);
+        putInternal(key, value);
     }
 
     /**
@@ -79,6 +85,12 @@ public class ConfigService {
         keyStorageService.put(key.getKey(), value);
     }
 
+    private static void ensureStringType(ConfigKey key) {
+        if (!isStringType(key)) {
+            throw new IllegalArgumentException(key.name() + " is not string");
+        }
+    }
+
     private static void ensureBooleanType(ConfigKey key) {
         if (!isBooleanType(key)) {
             throw new IllegalArgumentException(key.name() + " is not boolean");
@@ -90,5 +102,4 @@ public class ConfigService {
             throw new IllegalArgumentException(key.name() + " is not long list");
         }
     }
-
 }

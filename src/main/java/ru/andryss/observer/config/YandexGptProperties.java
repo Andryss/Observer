@@ -29,13 +29,6 @@ public class YandexGptProperties {
     private String modelUri;
     @Min(3)
     private int contextMessagesCount = 21;
-    @NotBlank
-    private String defaultModelInstruction = """
-            Будь как хороший друг — общайся просто, по-человечески, без официоза.
-            Отвечай кратко и по сути, не больше пары предложений, не занудствуй.
-            Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
-            Не строй из себя всезнайку.
-            """;
     @NotNull
     @DecimalMin("0.0")
     @DecimalMax("1.0")

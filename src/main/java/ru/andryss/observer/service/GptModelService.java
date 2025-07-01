@@ -15,6 +15,8 @@ import ru.andryss.observer.model.MessageDto;
 import ru.andryss.observer.model.MessageRole;
 import ru.andryss.observer.repository.ChatContextRepository;
 
+import static ru.andryss.observer.model.ConfigKey.MODEL_INSTRUCTION;
+
 /**
  * Service for working with gpt models
  */
@@ -27,6 +29,7 @@ public class GptModelService {
     private final YandexGptFacade yandexGptFacade;
     private final Clock clock;
     private final YandexGptProperties properties;
+    private final ConfigService configService;
 
     /**
      * Handle user chat message and return model answer
@@ -59,11 +62,19 @@ public class GptModelService {
         return modelResponse;
     }
 
+    /**
+     * Clear chat saved context if exists
+     */
+    public void clearContext(String chatId) {
+        log.info("Clearing context for chat {}", chatId);
+        chatContextRepository.deleteByChatId(chatId);
+    }
+
     private ChatContextEntity createContext(String chatId) {
         ChatContextEntity context = new ChatContextEntity();
         context.setChatId(chatId);
         context.setMessages(List.of(
-                new MessageDto(MessageRole.SYSTEM, properties.getDefaultModelInstruction())
+                new MessageDto(MessageRole.SYSTEM, configService.getString(MODEL_INSTRUCTION))
         ));
         Instant now = Instant.now(clock);
         context.setUpdatedAt(now);

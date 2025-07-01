@@ -62,6 +62,19 @@ public enum ConfigKey {
     ADMIN_USER_IDS(
             "admin.userIds",
             List.<Long>of(), new TypeReference<List<Long>>() {}
+    ),
+    CLEAR_CONTEXT_COMMAND_EXECUTOR_ACTIVE(
+            "clearContextCommandExecutor.active",
+            false, new TypeReference<Boolean>() {}
+    ),
+    MODEL_INSTRUCTION(
+            "model.instruction",
+            """
+            Будь как хороший друг — общайся просто, по-человечески, без официоза.
+            Отвечай кратко и по сути, не больше пары предложений, не занудствуй.
+            Поддерживай разговор, интересуйся собеседником, шутки и мемы — по настроению.
+            Не строй из себя всезнайку.
+            """, new TypeReference<String>() {}
     );
 
     private final String key;

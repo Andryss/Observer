@@ -233,6 +233,8 @@ class SendMessageExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessMessageSent() {
+        keyStorageService.put("model.instruction", "mock-model-instruction");
+
         mockYandexGptApiResponse();
 
         executor.process(buildUpdate("some-text"), sender);
@@ -250,6 +252,8 @@ class SendMessageExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessWithContextSaved() {
+        keyStorageService.put("model.instruction", "mock-model-instruction");
+
         mockYandexGptApiResponse();
 
         executor.process(buildUpdate("some-text-1"), sender);
@@ -270,6 +274,8 @@ class SendMessageExecutorTest extends BaseDbTest {
     @Test
     @SneakyThrows
     void testProcessWithOldContextCleared() {
+        keyStorageService.put("model.instruction", "mock-model-instruction");
+
         mockYandexGptApiResponse();
 
         executor.process(buildUpdate("some-text-1"), sender);

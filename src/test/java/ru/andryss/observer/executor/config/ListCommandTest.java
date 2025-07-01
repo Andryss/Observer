@@ -21,6 +21,8 @@ class ListCommandTest extends AbstractCommandTest {
                         `SEND_MESSAGE_ALLOWED_CHATS` -- (java.util.List<java.lang.Long>)
                         `CONFIG_COMMAND_EXECUTOR_ACTIVE` -- (java.lang.Boolean)
                         `ADMIN_USER_IDS` -- (java.util.List<java.lang.Long>)
+                        `CLEAR_CONTEXT_COMMAND_EXECUTOR_ACTIVE` -- (java.lang.Boolean)
+                        `MODEL_INSTRUCTION` -- (java.lang.String)
                         """);
     }
 

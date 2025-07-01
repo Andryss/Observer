@@ -67,4 +67,15 @@ public class ChatContextRepository implements InitializingBean {
 
         return Optional.of(contexts.get(0));
     }
+
+    /**
+     * Delete chat context by chat id
+     */
+    public void deleteByChatId(String chatId) {
+        jdbcTemplate.update("""
+                delete from chat_contexts
+                where chat_id = :chatId
+                """, new MapSqlParameterSource()
+                .addValue("chatId", chatId));
+    }
 }
